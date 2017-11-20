@@ -1,0 +1,303 @@
+/*
+ * Device Tree file for GTI Armada 3720 sheeva64 board
+ *
+ * Device Tree file for Marvell Armada 3720 community board
+ * Copyright (C) 2016 Marvell
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License as
+ *     published by the Free Software Foundation; either version 2 of the
+ *     License, or (at your option) any later version.
+ *
+ *     This file is distributed in the hope that it will be useful
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED , WITHOUT WARRANTY OF ANY KIND
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/dts-v1/;
+
+#include "armada-372x.dtsi"
+
+/ {
+	model = "gti armada 3720 sheeva64 board";
+	compatible = "gti,armada-3720-sheeva64-r5", "gti,armada-3720-sheeva64",
+				 "marvell,armada3720", "marvell,armada3710";
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x00000000 0x00000000 0x20000000>;
+	};
+
+	soc {
+		internal-regs {
+			uart0: serial@12000 {
+				status = "okay";
+			};
+
+			i2c0: i2c@11000 {
+				status = "okay";
+				clock-frequency = <100000>;
+
+				rtc@51 {
+					compatible = "nxp,pcf8563";
+					reg = <0x51>;
+				};
+			};
+
+			reg_avs: avs@11500 {
+				compatible = "marvell,armada-3700-espressobin-avs";
+				status = "okay";
+			};
+
+			spi0: spi@10600 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&spi_quad_pins>;
+				status = "okay";
+
+				spi-flash@0 {
+					compatible = "jedec,spi-nor";
+					reg = <0>;
+					spi-max-frequency = <108000000>;
+					spi-rx-bus-width = <4>;
+					spi-tx-bus-width = <4>;
+					m25p,fast-read;
+
+					partitions {
+						compatible = "fixed-partitions";
+						#address-cells = <1>;
+						#size-cells = <1>;
+						partition@0 {
+							label = "u-boot";
+							reg = <0x0 0x3e0000>;
+						};
+						partition@3e0000 {
+							label = "priv-data";
+							reg = <0x3e0000 0x10000>;
+							read-only;
+						};
+						partition@3f0000 {
+							label = "u-boot-env";
+							reg = <0x3f0000 0x10000>;
+						};
+					};
+				};
+			};
+
+			eth0: ethernet@30000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&smi_pins>;
+				phy-mode = "sgmii";
+				phy = <&phy0>;
+				phys = <&a3700_comphy 1 COMPHY_SGMII0>;
+				phy-names = "comphy";
+				status = "okay";
+				buffer-manager = <&bm>;
+				bm,pool-long = <1>;
+				bm,pool-short = <3>;
+			};
+
+			eth1: ethernet@40000 {
+				phy-mode = "sgmii";
+				phy = <&phy1>;
+				phys = <&a3700_comphy 0 COMPHY_SGMII1>;
+				phy-names = "comphy";
+				status = "okay";
+				buffer-manager = <&bm>;
+				bm,pool-long = <2>;
+				bm,pool-short = <3>;
+			};
+
+			mdio@32004 {
+				phy0: ethernet-phy@0 {
+					reg = <0>;
+				};
+				phy1: ethernet-phy@1 {
+					reg = <1>;
+				};
+			};
+
+			u3d@50000 {
+				status = "disabled";
+				phys = <&a3700_comphy 2 COMPHY_USB3>;
+				phy-names = "usb";
+			};
+
+			udc@54100 {
+				status = "disabled";
+				phys = <&utmi_usb32>;
+				phy-names = "usb";
+			};
+
+			usb3@58000 {
+				status = "okay";
+				usb-phy = <&usb_phy>;
+				phys = <&utmi_usb32>, /* utmi usb32 dedicated phy */
+					   <&a3700_comphy 2 COMPHY_USB3>; /* usb3 comphy */
+				phy-names = "usb2", "usb3";
+			};
+
+			usb@5e000 {
+				status = "okay";
+				phys = <&utmi_usb2>;
+				phy-names = "usb";
+			};
+
+			utmi_usb32: utmi@5d000 {
+				status = "okay";
+			};
+
+			utmi_usb2: utmi@5f000 {
+				status = "okay";
+			};
+
+			usb_phy: usb_phy@5d800 {
+				vcc-supply = <&reg_usb3_vbus>;
+				status = "okay";
+			};
+
+			sdhci0: sdhci@d8000 {
+				marvell,pad-type = "fixed-1-8v";
+				non-removable;
+				bus-width = <8>;
+				mmc-ddr-1_8v;
+				mmc-hs400-1_8v;
+				marvell,xenon-emmc;
+				marvell,xenon-tun-count = <9>;
+				status = "okay";
+
+				pinctrl-names = "default";
+				pinctrl-0 = <&mmc_pins>;
+			};
+
+			sdhci1: sdhci@d0000 {
+				wp-inverted;
+				bus-width = <4>;
+				cd-gpios = <&gpionb 3 GPIO_ACTIVE_LOW>;
+				no-1-8-v;
+				vqmmc-supply = <&vccq_sdio_reg>;
+				marvell,pad-type = "sd";
+				status = "okay";
+
+				pinctrl-names = "default";
+				pinctrl-0 = <&sdio_pins>;
+			};
+
+			vcc_sd_set: regulator@0 {
+				compatible = "regulator-gpio";
+				regulator-name = "vcc-sd-reg";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-boot-on;
+
+				gpios = <&gpionb 4 GPIO_ACTIVE_HIGH>;
+				gpios-states = <0>;
+				states = <1800000 0x1 3300000 0x0>;
+
+				enable-active-high;
+			};
+
+			vccq_sdio_reg: regulator@1 {
+				compatible = "regulator-fixed";
+				regulator-name = "vccq-sdio-reg";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				status = "okay";
+			};
+
+			eip97: eip97@90000 {
+				status = "okay";
+			};
+		};
+	};
+
+	reg_usb3_vbus: usb3-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb3-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&gpionb 11 GPIO_ACTIVE_HIGH>;
+	};
+
+	reg_usb2_vbus: usb2-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb2-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		gpio = <&gpionb 17 GPIO_ACTIVE_HIGH>;
+	};
+
+	reg_wifi_vbus: wifi-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&gpionb 12 GPIO_ACTIVE_HIGH>;
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+		red {
+			label = "led-red";
+			gpios = <&gpiosb 2 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "timer";
+			blink_delay_off = <400>;
+			blink_delay_on = <400>;
+		};
+		green {
+			label = "led-green";
+			gpios = <&gpiosb 4 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+		blue {
+			label = "led-blue";
+			gpios = <&gpiosb 5 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
+
+	rfkill {
+		compatible = "rfkill-regulator";
+		devname = "usb8997";
+		type = <1>;
+		vrfkill-supply = <&reg_wifi_vbus>;
+	};
+};

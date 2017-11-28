@@ -146,6 +146,20 @@
 				status = "okay";
 			};
 
+			sdhci0: sdhci@d8000 {
+				marvell,pad-type = "fixed-1-8v";
+				non-removable;
+				bus-width = <8>;
+				mmc-ddr-1_8v;
+				mmc-hs400-1_8v;
+				marvell,xenon-emmc;
+				marvell,xenon-tun-count = <9>;
+				status = "okay";
+
+				pinctrl-names = "default";
+				pinctrl-0 = <&mmc_pins>;
+			};
+
 			sdhci1: sdhci@d0000 {
 				wp-inverted;
 				bus-width = <4>;

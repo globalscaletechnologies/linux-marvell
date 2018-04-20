@@ -8,6 +8,7 @@ dtb-$(CONFIG_ARCH_MVEBU) += armada-3720-db-B.dtb
 dtb-$(CONFIG_ARCH_MVEBU) += armada-3720-db-C.dtb
 dtb-$(CONFIG_ARCH_MVEBU) += armada-3720-community.dtb
 dtb-$(CONFIG_ARCH_MVEBU) += armada-3720-community-v5.dtb
+dtb-$(CONFIG_ARCH_MVEBU) += armada-3720-community-v7.dtb
 dtb-$(CONFIG_ARCH_MVEBU) += armada-37x0-customer.dtb
 dtb-$(CONFIG_ARCH_MVEBU) += armada-3900-db-axis.dtb
 dtb-$(CONFIG_ARCH_MVEBU) += armada-3900-db-vd.dtb

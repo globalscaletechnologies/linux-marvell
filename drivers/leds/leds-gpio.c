@@ -143,6 +143,9 @@ static int create_gpio_led(const struct gpio_led *template,
 	if (ret < 0)
 		return ret;
 
+	/* update initial value for gpio pin */
+	gpiod_set_value(led_dat->gpiod, state);
+
 	INIT_WORK(&led_dat->work, gpio_led_work);
 
 	return led_classdev_register(parent, &led_dat->cdev);

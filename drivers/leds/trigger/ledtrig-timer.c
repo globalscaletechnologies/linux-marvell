@@ -30,14 +30,15 @@ static ssize_t led_delay_on_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
 	struct led_classdev *led_cdev = dev_get_drvdata(dev);
-	unsigned long state;
+	unsigned long state, delay_off;
 	ssize_t ret = -EINVAL;
 
 	ret = kstrtoul(buf, 10, &state);
 	if (ret)
 		return ret;
 
-	led_blink_set(led_cdev, &state, &led_cdev->blink_delay_off);
+	delay_off = led_cdev->blink_delay_off;
+	led_blink_set(led_cdev, &state, &delay_off);
 	led_cdev->blink_delay_on = state;
 
 	return size;
@@ -55,14 +56,15 @@ static ssize_t led_delay_off_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
 	struct led_classdev *led_cdev = dev_get_drvdata(dev);
-	unsigned long state;
+	unsigned long state, delay_on;
 	ssize_t ret = -EINVAL;
 
 	ret = kstrtoul(buf, 10, &state);
 	if (ret)
 		return ret;
 
-	led_blink_set(led_cdev, &led_cdev->blink_delay_on, &state);
+	delay_on = led_cdev->blink_delay_on;
+	led_blink_set(led_cdev, &delay_on, &state);
 	led_cdev->blink_delay_off = state;
 
 	return size;

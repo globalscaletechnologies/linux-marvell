@@ -17,6 +17,7 @@
 #include <linux/device.h>
 #include <linux/ctype.h>
 #include <linux/leds.h>
+#include <linux/of.h>
 
 static ssize_t led_delay_on_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -76,6 +77,9 @@ static DEVICE_ATTR(delay_off, 0644, led_delay_off_show, led_delay_off_store);
 static void timer_trig_activate(struct led_classdev *led_cdev)
 {
 	int rc;
+	struct device *dev = led_cdev->dev->parent;
+	struct device_node *node = dev->of_node, *child_node;
+	unsigned long blink_delay_on = 0, blink_delay_off = 0;
 
 	led_cdev->trigger_data = NULL;
 
@@ -86,8 +90,24 @@ static void timer_trig_activate(struct led_classdev *led_cdev)
 	if (rc)
 		goto err_out_delayon;
 
-	led_blink_set(led_cdev, &led_cdev->blink_delay_on,
-		      &led_cdev->blink_delay_off);
+	/* load default delay_on/off value from device tree */
+	for_each_available_child_of_node(node, child_node) {
+		const char *label;
+		label = of_get_property(child_node, "label", NULL);
+		if (!strcmp(led_cdev->name, label)) {
+			if (of_property_read_u32(child_node, "blink_delay_on",
+									 (u32*)&blink_delay_on))
+				break;
+			if (of_property_read_u32(child_node, "blink_delay_off",
+									 (u32*)&blink_delay_off))
+				break;
+			led_cdev->blink_delay_on = blink_delay_on;
+			led_cdev->blink_delay_off = blink_delay_off;
+			break;
+		}
+	}
+
+	led_blink_set(led_cdev, &blink_delay_on, &blink_delay_off);
 	led_cdev->activated = true;
 
 	return;
